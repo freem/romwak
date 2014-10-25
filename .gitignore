@@ -1,6 +1,5 @@
 *.o
 *.exe
 romwak
-fake.txt
-ekaf.txt
+fake*.txt
 fake.out
