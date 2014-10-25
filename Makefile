@@ -9,4 +9,4 @@ all: romwak
 romwak: romwak.o
 
 clean:
-	rm -f *.o romwak.exe
+	rm -f *.o
