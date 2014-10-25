@@ -553,9 +553,9 @@ int main(int argc, char* argv[]){
 	}
 
 	/* command line argument parsing (originally in ROMWAK.DPR) */
-	/* The original program used /switches, but I might want to support
-	 * --switches as well, for people who aren't on Windows... */
-	if(argv[1][0] != '/'){
+	/* The original program used /switches, but this port allows shorthand
+	 * switches with a '-' as well, for people who aren't on Windows. */
+	if(argv[1][0] != '/' && argv[1][0] != '-'){
 		printf("ERROR: Invalid command %s\n\n",argv[1]);
 		Usage();
 		return EXIT_FAILURE; /* command syntax is wrong, broheim */

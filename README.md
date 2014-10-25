@@ -15,6 +15,8 @@ The base command is romwak <option>, where the options are:
 /w - Split file into two files, alternating words into output files.
 /p - Pad file to [psize] in K with [pbyte] value (0-255).
 
+The program also supports shorthand -params (e.g. '-b', '-p', and so on).
+
 ### Split File in Two, Alternating Bytes (/b) ###
 romwak /b 
 
