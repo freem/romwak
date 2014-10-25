@@ -218,6 +218,8 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 		curPos+=2;
 		i++;
 	}
+	free(inBuf1);
+	free(inBuf2);
 
 	/* write output file */
 	result = fwrite(outBuf,sizeof(unsigned char),outBufLen,pOutFile);
@@ -228,8 +230,6 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 	fclose(pOutFile);
 	printf("'%s' saved successfully!\n",fileOut);
 
-	free(inBuf1);
-	free(inBuf2);
 	free(outBuf);
 	return EXIT_SUCCESS;
 }
