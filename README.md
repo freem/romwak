@@ -40,7 +40,8 @@ This works pretty awkwardly with odd length files (one byte will be missing).
 <outfile> is optional; if omitted, the file will be swapped in place.
 
 ### Split File Two, Alternating Words (/w) ###
-romwak /w 
+romwak /w <infile> <outfile1> <outfile2>
+Splits the specified input file into two files by words (two bytes).
 
 ### Pad file (/p) ###
 romwak /p <infile> <outfile> <padsize> <padbyte>
