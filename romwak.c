@@ -128,16 +128,66 @@ int FlipByte(char *fileIn, char *fileOut){
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
+	/* If the second file is not passed in, flip the file in place. */
+	if(fileOut == NULL){
+		fileOut = fileIn;
+	}
 
-	/*
+	printf("Flipping bytes of '%s', saving to '%s'\n",fileIn,fileOut);
+
 	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
 		perror("Error attempting to open input file");
 		exit(EXIT_FAILURE);
 	}
-	*/
 
+	/* find file size */
+	long length = FileSize(pInFile);
+	rewind(pInFile);
+
+	/* copy data into buffer */
+	unsigned char *buffer = (unsigned char*)malloc(length);
+	if(buffer == NULL){
+		printf("Error allocating memory for buffer.");
+		exit(EXIT_FAILURE);
+	}
+
+	size_t result = fread(buffer,sizeof(unsigned char),length,pInFile);
+	if(result != length){
+		perror("Error reading input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile);
+
+	/* Create new file */
+	pOutFile = fopen(fileOut,"wb");
+	if(pOutFile == NULL){
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* flip bytes in buffer */
+	long i = 0;
+	unsigned char b1, b2;
+	while(i<length){
+		b1 = buffer[i];
+		b2 = buffer[i+1];
+		buffer[i+1] = b1;
+		buffer[i] = b2;
+		i+=2;
+	}
+
+	/* write output file */
+	result = fwrite(buffer,sizeof(unsigned char),length,pOutFile);
+	if(result != length){
+		perror("Error writing output file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pOutFile);
+	printf("'%s' saved successfully!\n",fileOut);
+
+	free(buffer);
 	return EXIT_SUCCESS;
 }
 /*----------------------------------------------------------------------------*/
@@ -158,6 +208,8 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 		return EXIT_FAILURE;
 	}
 
+	printf("Merging bytes of '%s' and '%s', saving to '%s'\n",fileIn1,fileIn2,fileOut);
+
 	FILE *pInFile1, *pInFile2, *pOutFile;
 
 	/* Read file 1 */
@@ -173,6 +225,11 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 
 	/* put file 1's contents into buffer */
 	unsigned char *inBuf1 = (unsigned char*)malloc(length1);
+	if(inBuf1 == NULL){
+		printf("Error allocating memory for input file buffer 1.");
+		exit(EXIT_FAILURE);
+	}
+
 	size_t result = fread(inBuf1,sizeof(unsigned char),length1,pInFile1);
 	if(result != length1){
 		perror("Error reading first input file");
@@ -193,6 +250,11 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 
 	/* put file 2's contents into buffer */
 	unsigned char *inBuf2 = (unsigned char*)malloc(length2);
+	if(inBuf2 == NULL){
+		printf("Error allocating memory for input file buffer 2.");
+		exit(EXIT_FAILURE);
+	}
+
 	result = fread(inBuf2,sizeof(unsigned char),length2,pInFile2);
 	if(result != length2){
 		perror("Error reading second input file");
@@ -210,6 +272,11 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 	/* merge bytes into a new buffer */
 	long outBufLen = length1+length2;
 	unsigned char *outBuf = (unsigned char*)malloc(outBufLen);
+	if(outBuf == NULL){
+		printf("Error allocating memory for output file buffer.");
+		exit(EXIT_FAILURE);
+	}
+
 	long i = 0;
 	long curPos = 0;
 	while(i<length1){
@@ -397,7 +464,7 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 
 /* ye olde main */
 int main(int argc, char* argv[]){
-	printf("ROMWak %s - freem port; original by Jeff Kurtz\n",ROMWAK_VERSION);
+	printf("ROMWak %s - original version by Jeff Kurtz / ANSI C port by freem\n",ROMWAK_VERSION);
 	if(argc < 2){
 		Usage();
 		return EXIT_FAILURE; /* failure to run due to no options */

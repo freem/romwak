@@ -19,7 +19,7 @@ The base command is romwak <option>, where the options are:
 romwak /b 
 
 ### Flip High/Low Bytes (/f) ###
-romwak /f 
+romwak /f <infile> <outfile>
 
 ### Split File in Half (/h) ###
 romwak /h 
