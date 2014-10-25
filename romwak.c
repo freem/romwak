@@ -26,7 +26,11 @@ void Usage(){
 }
 /*----------------------------------------------------------------------------*/
 
-/* FileExists(char *fileIn) - Helper function to determine if a file exists. */
+/* FileExists(char *fileIn) - Helper function to determine if a file exists.
+ *
+ * (Params)
+ * char *fileIn			Target filename
+ */
 bool FileExists(char *fileIn){
 	/* try opening file */
 	FILE *f = fopen(fileIn,"r");
@@ -38,6 +42,18 @@ bool FileExists(char *fileIn){
 	/* file open unsuccessful, print error */
 	perror("Error attempting to open file");
 	return false;
+}
+/*----------------------------------------------------------------------------*/
+
+/* FileSize(FILE *pFile) - Helper function to determine a file's size.
+ * Does not rewind the file, you must do it yourself.
+ *
+ * (Params)
+ * FILE *pFile			Handle to a loaded file.
+ */
+long FileSize(FILE *pFile){
+	fseek(pFile,0,SEEK_END); /* SEEK_END is non-portable, sorry */
+	return ftell(pFile);
 }
 /*----------------------------------------------------------------------------*/
 
@@ -109,7 +125,14 @@ int FlipByte(char *fileIn, char *fileOut){
 		return EXIT_FAILURE;
 	}
 
-	/* FILE *pInFile, *pOutFile; */
+	/*
+	FILE *pInFile, *pOutFile;
+	pInFile = fopen(fileIn,"rb");
+	if(pInFile == NULL){
+		perror("Error attempting to open input file");
+		exit(EXIT_FAILURE);
+	}
+	*/
 
 	return EXIT_SUCCESS;
 }
@@ -149,8 +172,36 @@ int SwapHalf(char *fileIn, char *fileOut){
 		return EXIT_FAILURE;
 	}
 
-	/*FILE *pInFile, *pOutFile;*/
+	/*
+	FILE *pInFile, *pOutFile;
+	pInFile = fopen(fileIn,"rb");
+	if(pInFile == NULL){
+		perror("Error attempting to open input file");
+		exit(EXIT_FAILURE);
+	}
+	*/
 
+	/* find current file size */
+	/*
+	long length = FileSize(pInFile);
+	rewind(pInFile);
+	long halfLength = length/2;
+	*/
+
+	/*
+	unsigned char *inBufHalf1;
+	unsigned char *inBufHalf2;
+	*/
+
+	/*close(pInFile);*/
+
+	/*unsigned char *outBufSwapped;*/
+
+	/*
+	free(inBufHalf1);
+	free(inBufHalf2);
+	free(outBufSwapped);
+	*/
 	return EXIT_SUCCESS;
 }
 /*----------------------------------------------------------------------------*/
@@ -177,9 +228,7 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 	}
 
 	/* find current file size */
-	long length = 0;
-	fseek(pInFile,0,SEEK_END); /* SEEK_END is non-portable, sorry */
-	length = ftell(pInFile);
+	long length = FileSize(pInFile);
 	rewind(pInFile);
 
 	/* copy data into buffer */

@@ -17,5 +17,6 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut);
 int SwapHalf(char *fileIn, char *fileOut);
 int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte);
 
-/* Helper Functions */
+/* [Helper Functions] */
 bool FileExists(char *fileIn);
+long FileSize(FILE *pFile);
