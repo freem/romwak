@@ -172,36 +172,66 @@ int SwapHalf(char *fileIn, char *fileOut){
 		return EXIT_FAILURE;
 	}
 
-	/*
 	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
 		perror("Error attempting to open input file");
 		exit(EXIT_FAILURE);
 	}
-	*/
 
 	/* find current file size */
-	/*
 	long length = FileSize(pInFile);
 	rewind(pInFile);
 	long halfLength = length/2;
-	*/
 
-	/*
-	unsigned char *inBufHalf1;
-	unsigned char *inBufHalf2;
-	*/
+	/* read halves of file into two buffers */
+	unsigned char *inBufHalf1 = (unsigned char*)malloc(halfLength);
+	if(inBufHalf1 == NULL){
+		printf("Error allocating memory for input file buffer 1.");
+		exit(EXIT_FAILURE);
+	}
+	size_t result = fread(inBufHalf1,sizeof(unsigned char),halfLength,pInFile);
+	if(result != halfLength){
+		perror("Error reading input file");
+		exit(EXIT_FAILURE);
+	}
 
-	/*close(pInFile);*/
+	unsigned char *inBufHalf2 = (unsigned char*)malloc(halfLength);
+	if(inBufHalf2 == NULL){
+		printf("Error allocating memory for input file buffer 1.");
+		exit(EXIT_FAILURE);
+	}
+	result = fread(inBufHalf2,sizeof(unsigned char),halfLength,pInFile);
+	if(result != halfLength){
+		perror("Error reading input file");
+		exit(EXIT_FAILURE);
+	}
 
-	/*unsigned char *outBufSwapped;*/
+	close(pInFile);
 
-	/*
+	/* create new file from buffers written in reverse order */
+	pOutFile = fopen(fileOut,"wb");
+	if(pOutFile == NULL){
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* write output file */
+	result = fwrite(inBufHalf2,sizeof(unsigned char),halfLength,pOutFile);
+	if(result != halfLength){
+		perror("Error writing output file");
+		exit(EXIT_FAILURE);
+	}
+	result = fwrite(inBufHalf1,sizeof(unsigned char),halfLength,pOutFile);
+	if(result != halfLength){
+		perror("Error writing output file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pOutFile);
+	printf("'%s' saved successfully!\n",fileOut);
+
 	free(inBufHalf1);
 	free(inBufHalf2);
-	free(outBufSwapped);
-	*/
 	return EXIT_SUCCESS;
 }
 /*----------------------------------------------------------------------------*/
