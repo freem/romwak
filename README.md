@@ -18,10 +18,14 @@ The base command is romwak <option>, where the options are:
 The program also supports shorthand -params (e.g. '-b', '-p', and so on).
 
 ### Split File in Two, Alternating Bytes (/b) ###
-romwak /b 
+romwak /b <infile> <outfile1> <outfile2>
+Splits the specified input file into two files by words (two bytes).
 
 ### Flip High/Low Bytes (/f) ###
-romwak /f <infile> <outfile>
+romwak /f <infile> [<outfile>]
+Flips the high and low bytes of the specified file.
+
+<outfile> is optional; if omitted, the file will be swapped in place.
 
 ### Split File in Half (/h) ###
 romwak /h 
