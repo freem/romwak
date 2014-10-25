@@ -10,6 +10,8 @@
 
 #include "romwak.h"
 
+#define ROMWAK_VERSION	"0.x"
+
 /* Usage() - Print program usage. */
 void Usage(){
 	printf("usage: romwak <option> <infile> <outfile> [outfile2] [psize] [pbyte]\n");
@@ -23,6 +25,8 @@ void Usage(){
 	printf(" /p - Pad file to [psize] in K with [pbyte] value (0-255).\n");
 	printf("\n");
 	printf("NOTE: Omission of [outfile2] will result in the second file not being saved.\n");
+	printf("See the included README.md for more details. If README.md was not included,\n");
+	printf("please visit https://github.com/freem/romwak/\n");
 }
 /*----------------------------------------------------------------------------*/
 
@@ -154,8 +158,79 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 		return EXIT_FAILURE;
 	}
 
-	/* FILE *pInFile1, *pInFile2, *pOutFile; */
+	FILE *pInFile1, *pInFile2, *pOutFile;
 
+	/* Read file 1 */
+	pInFile1 = fopen(fileIn1,"rb");
+	if(pInFile1 == NULL){
+		perror("Error attempting to open first input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find first file size */
+	long length1 = FileSize(pInFile1);
+	rewind(pInFile1);
+
+	/* put file 1's contents into buffer */
+	unsigned char *inBuf1 = (unsigned char*)malloc(length1);
+	size_t result = fread(inBuf1,sizeof(unsigned char),length1,pInFile1);
+	if(result != length1){
+		perror("Error reading first input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile1);
+
+	/* Read file 2 */
+	pInFile2 = fopen(fileIn2,"rb");
+	if(pInFile2 == NULL){
+		perror("Error attempting to open second input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find second file size */
+	long length2 = FileSize(pInFile2);
+	rewind(pInFile2);
+
+	/* put file 2's contents into buffer */
+	unsigned char *inBuf2 = (unsigned char*)malloc(length2);
+	result = fread(inBuf2,sizeof(unsigned char),length2,pInFile2);
+	if(result != length2){
+		perror("Error reading second input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile2);
+
+	/* Create new file */
+	pOutFile = fopen(fileOut,"wb");
+	if(pOutFile == NULL){
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* merge bytes into a new buffer */
+	long outBufLen = length1+length2;
+	unsigned char *outBuf = (unsigned char*)malloc(outBufLen);
+	long i = 0;
+	long curPos = 0;
+	while(i<length1){
+		outBuf[curPos] = inBuf1[i];
+		outBuf[curPos+1] = inBuf2[i];
+		curPos+=2;
+		i++;
+	}
+
+	/* write output file */
+	result = fwrite(outBuf,sizeof(unsigned char),outBufLen,pOutFile);
+	if(result != outBufLen){
+		perror("Error writing output file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pOutFile);
+	printf("'%s' saved successfully!\n",fileOut);
+
+	free(inBuf1);
+	free(inBuf2);
+	free(outBuf);
 	return EXIT_SUCCESS;
 }
 /*----------------------------------------------------------------------------*/
@@ -171,6 +246,12 @@ int SwapHalf(char *fileIn, char *fileOut){
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
+	/* If the second file is not passed in, swap the file in place. */
+	if(fileOut == NULL){
+		fileOut = fileIn;
+	}
+
+	printf("Swapping halves of '%s', saving to '%s'\n",fileIn,fileOut);
 
 	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
@@ -250,6 +331,11 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 		return EXIT_FAILURE;
 	}
 
+	unsigned int shortPadSize = (atoi(padSize));
+	unsigned char padChar = (unsigned char)atoi(padByte);
+	printf("Padding '%s' to %d kilobytes with byte 0x%02X, saving to '%s'\n",
+		fileIn,shortPadSize,padChar,fileOut);
+
 	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
@@ -262,7 +348,7 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 	rewind(pInFile);
 
 	/* copy data into buffer */
-	long fullPadSize = (atoi(padSize))*1024;
+	long fullPadSize = shortPadSize*1024;
 	long bufLength = fullPadSize;
 	unsigned char *buffer = (unsigned char*)malloc(bufLength);
 	if(buffer == NULL){
@@ -283,7 +369,7 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 	long bufPos = result;
 	long i = 0;
 	while(i<remain){
-		buffer[bufPos] = (unsigned char)atoi(padByte);
+		buffer[bufPos] = padChar;
 		bufPos++;
 		i++;
 	}
@@ -311,7 +397,7 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 
 /* ye olde main */
 int main(int argc, char* argv[]){
-	printf("ROMWak 0.x - freem port; original by Jeff Kurtz\n");
+	printf("ROMWak %s - freem port; original by Jeff Kurtz\n",ROMWAK_VERSION);
 	if(argc < 2){
 		Usage();
 		return EXIT_FAILURE; /* failure to run due to no options */
