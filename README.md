@@ -28,7 +28,8 @@ Flips the high and low bytes of the specified file.
 <outfile> is optional; if omitted, the file will be swapped in place.
 
 ### Split File in Half (/h) ###
-romwak /h 
+romwak /h <infile> <outfile1> <outfile2>
+Splits the input file in half into two files (outfile1 and outfile2).
 
 ### Byte Merge Two Files (/m) ###
 romwak /m <infile1> <infile2> <outfile>
@@ -47,11 +48,11 @@ This works pretty awkwardly with odd length files (one byte will be missing).
 
 ### Split File Two, Alternating Words (/w) ###
 romwak /w <infile> <outfile1> <outfile2>
-Splits the specified input file into two files by words (two bytes).
+Splits the input file into two files by words (two bytes).
 
 ### Pad file (/p) ###
 romwak /p <infile> <outfile> <padsize> <padbyte>
-Pads the specified input file to <padsize> Kilobytes with the specified byte.
+Pads the input file to <padsize> Kilobytes with the specified byte.
 
 <outfile> is currently not optional. This may change in a future release.
 <padsize> is multiplied by 1024, so for 64KB, enter 64 here, not 65535.
@@ -61,6 +62,5 @@ TODO
 ----
 * More error checking.
  * empty filenames, especially for output files.
-* Some functions have the ability for output file to be blank; this isn't handled yet.
-* Alternate command syntax (-p, -m, -s or --pad, --merge, --split)
+* Alternate command syntax (--pad, --merge, --split)
 * Other functionality not available in original ROMWak?

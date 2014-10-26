@@ -74,8 +74,89 @@ int EqualSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
+	printf("Splitting file '%s' equally, saving to '%s' and '%s'\n",fileIn,fileOutA,fileOutB);
 
-	/* FILE *pInFile, *pOutFile1, *pOutFile2; */
+	FILE *pInFile, *pOutFile1, *pOutFile2;
+
+	pInFile = fopen(fileIn,"rb");
+	if(pInFile == NULL){
+		perror("Error attempting to open input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find file size */
+	long length = FileSize(pInFile);
+	rewind(pInFile);
+
+	/* copy data into buffer */
+	unsigned char *inBuffer = (unsigned char*)malloc(length);
+	if(inBuffer == NULL){
+		printf("Error allocating memory for input file buffer.");
+		exit(EXIT_FAILURE);
+	}
+
+	size_t result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
+	if(result != length){
+		perror("Error reading input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile);
+
+	/* prepare output buffers */
+	long halfLength = length/2;
+	unsigned char *outBuf1 = (unsigned char*)malloc(halfLength);
+	if(outBuf1 == NULL){
+		printf("Error allocating memory for first output file buffer.");
+		exit(EXIT_FAILURE);
+	}
+	unsigned char *outBuf2 = (unsigned char*)malloc(halfLength);
+	if(outBuf2 == NULL){
+		printf("Error allocating memory for second output file buffer.");
+		exit(EXIT_FAILURE);
+	}
+
+	/* fill buffers */
+	long i = 0;
+	long pos = 0;
+	unsigned char b1, b2;
+	while(i<halfLength){
+		b1 = inBuffer[i];
+		b2 = inBuffer[i+halfLength];
+		outBuf1[pos] = b1;
+		outBuf2[pos] = b2;
+		i++;
+		pos++;
+	}
+	free(inBuffer);
+
+	/* write output files */
+	pOutFile1 = fopen(fileOutA,"wb");
+	if(pOutFile1 == NULL){
+		perror("Error attempting to create first output file");
+		exit(EXIT_FAILURE);
+	}
+	result = fwrite(outBuf1,sizeof(unsigned char),halfLength,pOutFile1);
+	if(result != halfLength){
+		perror("Error writing first output file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pOutFile1);
+	printf("'%s' saved successfully!\n",fileOutA);
+	free(outBuf1);
+
+	pOutFile2 = fopen(fileOutB,"wb");
+	if(pOutFile2 == NULL){
+		perror("Error attempting to create second output file");
+		exit(EXIT_FAILURE);
+	}
+	result = fwrite(outBuf2,sizeof(unsigned char),halfLength,pOutFile2);
+	if(result != halfLength){
+		perror("Error writing second output file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pOutFile2);
+	printf("'%s' saved successfully!\n",fileOutB);
+	free(outBuf2);
 
 	return EXIT_SUCCESS;
 }
