@@ -2,6 +2,12 @@ ROMWak
 ======
 Original program by Jeff Kurtz, ported to C by freem
 
+Tested and confirmed working on these platforms and compilers:
+* Windows x64 (gcc (rev5, Built by MinGW-W64 project) 4.8.1 on Windows 7 x64)
+* Linux x64 (gcc (Ubuntu 4.8.2-19ubuntu1) 4.8.2 on Linux 3.13.0-24 x86_64)
+* Linux PowerPC (gcc (Debian 4.6.3-14) 4.6.3 on Linux 3.2.0-4 powerpc)
+* OpenPandora/armv7l (arm-angstrom-linux-gnueabi-gcc (GCC) 4.3.3 on openpandora 3.2.53)
+
 Usage
 -----
 ROMWak is a program whose parameters change depending on what option you pass in.
