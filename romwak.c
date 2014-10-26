@@ -1,6 +1,6 @@
 /* ROMWak (ANSI C port by freem, original by Jeff Kurtz)
  *
- * ROMWak was originally programmed in Delphi. This port is in (mostly) ANSI C.
+ * ROMWak was originally programmed in Delphi. This port is in ANSI C.
  * The sources given to me were of version 0.3, though I have a version 0.4
  * binary on my computer. I have not analyzed the differences between the two
  * versions, as I do not have access to Delphi build tools.
@@ -72,12 +72,21 @@ long FileSize(FILE *pFile){
  * char *fileOutB		Output filename 2
  */
 int EqualSplit(char *fileIn, char *fileOutA, char *fileOutB){
+	FILE *pInFile, *pOutFile1, *pOutFile2;
+	long length;
+	unsigned char *inBuffer;
+	size_t result;
+	long halfLength;
+	unsigned char *outBuf1;
+	unsigned char *outBuf2;
+	long i = 0;
+	long pos = 0;
+	unsigned char b1, b2;
+
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
 	printf("Splitting file '%s' equally, saving to '%s' and '%s'\n",fileIn,fileOutA,fileOutB);
-
-	FILE *pInFile, *pOutFile1, *pOutFile2;
 
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
@@ -86,17 +95,17 @@ int EqualSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	}
 
 	/* find file size */
-	long length = FileSize(pInFile);
+	length = FileSize(pInFile);
 	rewind(pInFile);
 
 	/* copy data into buffer */
-	unsigned char *inBuffer = (unsigned char*)malloc(length);
+	inBuffer = (unsigned char*)malloc(length);
 	if(inBuffer == NULL){
 		printf("Error allocating memory for input file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
-	size_t result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
+	result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
 	if(result != length){
 		perror("Error reading input file");
 		exit(EXIT_FAILURE);
@@ -104,22 +113,19 @@ int EqualSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	fclose(pInFile);
 
 	/* prepare output buffers */
-	long halfLength = length/2;
-	unsigned char *outBuf1 = (unsigned char*)malloc(halfLength);
+	halfLength = length/2;
+	outBuf1 = (unsigned char*)malloc(halfLength);
 	if(outBuf1 == NULL){
 		printf("Error allocating memory for first output file buffer.");
 		exit(EXIT_FAILURE);
 	}
-	unsigned char *outBuf2 = (unsigned char*)malloc(halfLength);
+	outBuf2 = (unsigned char*)malloc(halfLength);
 	if(outBuf2 == NULL){
 		printf("Error allocating memory for second output file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
 	/* fill buffers */
-	long i = 0;
-	long pos = 0;
-	unsigned char b1, b2;
 	while(i<halfLength){
 		b1 = inBuffer[i];
 		b2 = inBuffer[i+halfLength];
@@ -171,12 +177,21 @@ int EqualSplit(char *fileIn, char *fileOutA, char *fileOutB){
  * char *fileOutB		Output filename 2
  */
 int ByteSplit(char *fileIn, char *fileOutA, char *fileOutB){
+	FILE *pInFile, *pOutFile1, *pOutFile2;
+	long length;
+	unsigned char *inBuffer;
+	size_t result;
+	long halfLength;
+	unsigned char *outBuf1;
+	unsigned char *outBuf2;
+	long i = 0;
+	long pos1 = 0;
+	long pos2 = 1;
+
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
 	printf("Splitting file '%s' into bytes, saving to '%s' and '%s'\n",fileIn,fileOutA,fileOutB);
-
-	FILE *pInFile, *pOutFile1, *pOutFile2;
 
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
@@ -185,17 +200,17 @@ int ByteSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	}
 
 	/* find file size */
-	long length = FileSize(pInFile);
+	length = FileSize(pInFile);
 	rewind(pInFile);
 
 	/* copy data into buffer */
-	unsigned char *inBuffer = (unsigned char*)malloc(length);
+	inBuffer = (unsigned char*)malloc(length);
 	if(inBuffer == NULL){
 		printf("Error allocating memory for input file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
-	size_t result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
+	result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
 	if(result != length){
 		perror("Error reading input file");
 		exit(EXIT_FAILURE);
@@ -203,22 +218,19 @@ int ByteSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	fclose(pInFile);
 
 	/* prepare output buffers */
-	long halfLength = length/2;
-	unsigned char *outBuf1 = (unsigned char*)malloc(halfLength);
+	halfLength = length/2;
+	outBuf1 = (unsigned char*)malloc(halfLength);
 	if(outBuf1 == NULL){
 		printf("Error allocating memory for first output file buffer.");
 		exit(EXIT_FAILURE);
 	}
-	unsigned char *outBuf2 = (unsigned char*)malloc(halfLength);
+	outBuf2 = (unsigned char*)malloc(halfLength);
 	if(outBuf2 == NULL){
 		printf("Error allocating memory for second output file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
 	/* fill buffers */
-	long i = 0;
-	long pos1 = 0;
-	long pos2 = 1;
 	while(i<halfLength){
 		outBuf1[i] = inBuffer[pos1];
 		outBuf2[i] = inBuffer[pos2];
@@ -269,12 +281,21 @@ int ByteSplit(char *fileIn, char *fileOutA, char *fileOutB){
  * char *fileOutB		Output filename 2
  */
 int WordSplit(char *fileIn, char *fileOutA, char *fileOutB){
+	FILE *pInFile, *pOutFile1, *pOutFile2;
+	long length;
+	unsigned char *inBuffer;
+	size_t result;
+	long halfLength;
+	unsigned char *outBuf1;
+	unsigned char *outBuf2;
+	long i = 0;
+	long pos1 = 0;
+	long pos2 = 2;
+
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
 	printf("Splitting file '%s' into words, saving to '%s' and '%s'\n",fileIn,fileOutA,fileOutB);
-
-	FILE *pInFile, *pOutFile1, *pOutFile2;
 
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
@@ -283,17 +304,17 @@ int WordSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	}
 
 	/* find file size */
-	long length = FileSize(pInFile);
+	length = FileSize(pInFile);
 	rewind(pInFile);
 
 	/* copy data into buffer */
-	unsigned char *inBuffer = (unsigned char*)malloc(length);
+	inBuffer = (unsigned char*)malloc(length);
 	if(inBuffer == NULL){
 		printf("Error allocating memory for input file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
-	size_t result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
+	result = fread(inBuffer,sizeof(unsigned char),length,pInFile);
 	if(result != length){
 		perror("Error reading input file");
 		exit(EXIT_FAILURE);
@@ -301,22 +322,19 @@ int WordSplit(char *fileIn, char *fileOutA, char *fileOutB){
 	fclose(pInFile);
 
 	/* prepare output buffers */
-	long halfLength = length/2;
-	unsigned char *outBuf1 = (unsigned char*)malloc(halfLength);
+	halfLength = length/2;
+	outBuf1 = (unsigned char*)malloc(halfLength);
 	if(outBuf1 == NULL){
 		printf("Error allocating memory for first output file buffer.");
 		exit(EXIT_FAILURE);
 	}
-	unsigned char *outBuf2 = (unsigned char*)malloc(halfLength);
+	outBuf2 = (unsigned char*)malloc(halfLength);
 	if(outBuf2 == NULL){
 		printf("Error allocating memory for second output file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
 	/* fill buffers */
-	long i = 0;
-	long pos1 = 0;
-	long pos2 = 2;
 	while(i<halfLength){
 		outBuf1[i] = inBuffer[pos1];
 		outBuf1[i+1] = inBuffer[pos1+1];
@@ -369,6 +387,13 @@ int WordSplit(char *fileIn, char *fileOutA, char *fileOutB){
  * char *fileOut		Output filename
  */
 int FlipByte(char *fileIn, char *fileOut){
+	FILE *pInFile, *pOutFile;
+	long length;
+	unsigned char *buffer;
+	size_t result;
+	long i = 0;
+	unsigned char b1, b2;
+
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
@@ -379,7 +404,6 @@ int FlipByte(char *fileIn, char *fileOut){
 
 	printf("Flipping bytes of '%s', saving to '%s'\n",fileIn,fileOut);
 
-	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
 		perror("Error attempting to open input file");
@@ -387,17 +411,17 @@ int FlipByte(char *fileIn, char *fileOut){
 	}
 
 	/* find file size */
-	long length = FileSize(pInFile);
+	length = FileSize(pInFile);
 	rewind(pInFile);
 
 	/* copy data into buffer */
-	unsigned char *buffer = (unsigned char*)malloc(length);
+	buffer = (unsigned char*)malloc(length);
 	if(buffer == NULL){
 		printf("Error allocating memory for buffer.");
 		exit(EXIT_FAILURE);
 	}
 
-	size_t result = fread(buffer,sizeof(unsigned char),length,pInFile);
+	result = fread(buffer,sizeof(unsigned char),length,pInFile);
 	if(result != length){
 		perror("Error reading input file");
 		exit(EXIT_FAILURE);
@@ -412,8 +436,6 @@ int FlipByte(char *fileIn, char *fileOut){
 	}
 
 	/* flip bytes in buffer */
-	long i = 0;
-	unsigned char b1, b2;
 	while(i<length){
 		b1 = buffer[i];
 		b2 = buffer[i+1];
@@ -445,6 +467,16 @@ int FlipByte(char *fileIn, char *fileOut){
  * char *fileOut		Output filename
  */
 int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
+	FILE *pInFile1, *pInFile2, *pOutFile;
+	long length1, length2;
+	unsigned char *inBuf1;
+	unsigned char *inBuf2;
+	size_t result;
+	long outBufLen;
+	unsigned char *outBuf;
+	long i = 0;
+	long curPos = 0;
+
 	if(!FileExists(fileIn1)){
 		return EXIT_FAILURE;
 	}
@@ -454,8 +486,6 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 
 	printf("Merging bytes of '%s' and '%s', saving to '%s'\n",fileIn1,fileIn2,fileOut);
 
-	FILE *pInFile1, *pInFile2, *pOutFile;
-
 	/* Read file 1 */
 	pInFile1 = fopen(fileIn1,"rb");
 	if(pInFile1 == NULL){
@@ -464,17 +494,17 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 	}
 
 	/* find first file size */
-	long length1 = FileSize(pInFile1);
+	length1 = FileSize(pInFile1);
 	rewind(pInFile1);
 
 	/* put file 1's contents into buffer */
-	unsigned char *inBuf1 = (unsigned char*)malloc(length1);
+	inBuf1 = (unsigned char*)malloc(length1);
 	if(inBuf1 == NULL){
 		printf("Error allocating memory for input file buffer 1.");
 		exit(EXIT_FAILURE);
 	}
 
-	size_t result = fread(inBuf1,sizeof(unsigned char),length1,pInFile1);
+	result = fread(inBuf1,sizeof(unsigned char),length1,pInFile1);
 	if(result != length1){
 		perror("Error reading first input file");
 		exit(EXIT_FAILURE);
@@ -489,11 +519,11 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 	}
 
 	/* find second file size */
-	long length2 = FileSize(pInFile2);
+	length2 = FileSize(pInFile2);
 	rewind(pInFile2);
 
 	/* put file 2's contents into buffer */
-	unsigned char *inBuf2 = (unsigned char*)malloc(length2);
+	inBuf2 = (unsigned char*)malloc(length2);
 	if(inBuf2 == NULL){
 		printf("Error allocating memory for input file buffer 2.");
 		exit(EXIT_FAILURE);
@@ -514,15 +544,13 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 	}
 
 	/* merge bytes into a new buffer */
-	long outBufLen = length1+length2;
-	unsigned char *outBuf = (unsigned char*)malloc(outBufLen);
+	outBufLen = length1+length2;
+	outBuf = (unsigned char*)malloc(outBufLen);
 	if(outBuf == NULL){
 		printf("Error allocating memory for output file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
-	long i = 0;
-	long curPos = 0;
 	while(i<length1){
 		outBuf[curPos] = inBuf1[i];
 		outBuf[curPos+1] = inBuf2[i];
@@ -554,6 +582,12 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
  * char *fileOut		Output filename
  */
 int SwapHalf(char *fileIn, char *fileOut){
+	FILE *pInFile, *pOutFile;
+	long length, halfLength;
+	unsigned char *inBufHalf1;
+	unsigned char *inBufHalf2;
+	size_t result;
+
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
@@ -564,7 +598,6 @@ int SwapHalf(char *fileIn, char *fileOut){
 
 	printf("Swapping halves of '%s', saving to '%s'\n",fileIn,fileOut);
 
-	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
 		perror("Error attempting to open input file");
@@ -572,23 +605,23 @@ int SwapHalf(char *fileIn, char *fileOut){
 	}
 
 	/* find current file size */
-	long length = FileSize(pInFile);
+	length = FileSize(pInFile);
 	rewind(pInFile);
-	long halfLength = length/2;
+	halfLength = length/2;
 
 	/* read halves of file into two buffers */
-	unsigned char *inBufHalf1 = (unsigned char*)malloc(halfLength);
+	inBufHalf1 = (unsigned char*)malloc(halfLength);
 	if(inBufHalf1 == NULL){
 		printf("Error allocating memory for input file buffer 1.");
 		exit(EXIT_FAILURE);
 	}
-	size_t result = fread(inBufHalf1,sizeof(unsigned char),halfLength,pInFile);
+	result = fread(inBufHalf1,sizeof(unsigned char),halfLength,pInFile);
 	if(result != halfLength){
 		perror("Error reading input file");
 		exit(EXIT_FAILURE);
 	}
 
-	unsigned char *inBufHalf2 = (unsigned char*)malloc(halfLength);
+	inBufHalf2 = (unsigned char*)malloc(halfLength);
 	if(inBufHalf2 == NULL){
 		printf("Error allocating memory for input file buffer 1.");
 		exit(EXIT_FAILURE);
@@ -638,16 +671,22 @@ int SwapHalf(char *fileIn, char *fileOut){
  * char *padByte		Value to pad with
  */
 int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
+	unsigned int shortPadSize = (atoi(padSize));
+	unsigned char padChar = (unsigned char)atoi(padByte);
+	FILE *pInFile, *pOutFile;
+	long length, fullPadSize,bufLength;
+	unsigned char *buffer;
+	size_t result;
+	long remain, bufPos;
+	long i = 0;
+
 	if(!FileExists(fileIn)){
 		return EXIT_FAILURE;
 	}
 
-	unsigned int shortPadSize = (atoi(padSize));
-	unsigned char padChar = (unsigned char)atoi(padByte);
 	printf("Padding '%s' to %d kilobytes with byte 0x%02X, saving to '%s'\n",
 		fileIn,shortPadSize,padChar,fileOut);
 
-	FILE *pInFile, *pOutFile;
 	pInFile = fopen(fileIn,"rb");
 	if(pInFile == NULL){
 		perror("Error attempting to open input file");
@@ -655,19 +694,19 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 	}
 
 	/* find current file size */
-	long length = FileSize(pInFile);
+	length = FileSize(pInFile);
 	rewind(pInFile);
 
 	/* copy data into buffer */
-	long fullPadSize = shortPadSize*1024;
-	long bufLength = fullPadSize;
-	unsigned char *buffer = (unsigned char*)malloc(bufLength);
+	fullPadSize = shortPadSize*1024;
+	bufLength = fullPadSize;
+	buffer = (unsigned char*)malloc(bufLength);
 	if(buffer == NULL){
 		printf("Error allocating memory for input file buffer.");
 		exit(EXIT_FAILURE);
 	}
 
-	size_t result = fread(buffer,sizeof(unsigned char),length,pInFile);
+	result = fread(buffer,sizeof(unsigned char),length,pInFile);
 	if(result != length){
 		perror("Error reading input file");
 		exit(EXIT_FAILURE);
@@ -676,9 +715,8 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 	fclose(pInFile);
 
 	/* add padding to buffer */
-	long remain = fullPadSize-(sizeof(unsigned char)*length);
-	long bufPos = result;
-	long i = 0;
+	remain = fullPadSize-(sizeof(unsigned char)*length);
+	bufPos = result;
 	while(i<remain){
 		buffer[bufPos] = padChar;
 		bufPos++;

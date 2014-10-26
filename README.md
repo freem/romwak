@@ -1,8 +1,10 @@
 ROMWak
 ======
-Original program by Jeff Kurtz, ported to C by freem
+Original program by Jeff Kurtz, ported to ANSI C by freem
 
 Tested and confirmed working on these platforms and compilers:
+* Windows x32 (Microsoft 32-bit C/C++ Optimizing Compiler Version 15.00.30729.01 for 80x86)
+* Windows x64 (tcc 0.9.26)
 * Windows x64 (gcc (rev5, Built by MinGW-W64 project) 4.8.1 on Windows 7 x64)
 * Linux x64 (gcc (Ubuntu 4.8.2-19ubuntu1) 4.8.2 on Linux 3.13.0-24 x86_64)
 * Linux PowerPC (gcc (Debian 4.6.3-14) 4.6.3 on Linux 3.2.0-4 powerpc)
