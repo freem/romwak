@@ -10,7 +10,7 @@
 
 #include "romwak.h"
 
-#define ROMWAK_VERSION	"0.x"
+#define ROMWAK_VERSION	"0.3c" /* derived from 0.3 source code; see above note */
 
 /* Usage() - Print program usage. */
 void Usage(){
@@ -25,6 +25,7 @@ void Usage(){
 	printf(" /p - Pad file to [psize] in K with [pbyte] value (0-255).\n");
 	printf("\n");
 	printf("NOTE: Omission of [outfile2] will result in the second file not being saved.\n");
+	printf("\n");
 	printf("See the included README.md for more details. If README.md was not included,\n");
 	printf("please visit https://github.com/freem/romwak/\n");
 }
