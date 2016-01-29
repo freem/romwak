@@ -17,10 +17,10 @@ void Usage(){
 	printf("usage: romwak <option> <infile> <outfile> [outfile2] [psize] [pbyte]\n");
 	printf("You must use one of these options:\n");
 	printf(" /b - Split file into two files, alternating bytes into separate files.\n");
-	printf(" /f - Flip low/high bytes of a file. (<outfile1> optional.)\n");
+	printf(" /f - Flip low/high bytes of a file. (<outfile> optional.)\n");
 	printf(" /h - Split file in half (two files).\n");
 	printf(" /m - Byte merge two files. (stores results in <outfile2>).\n");
-	printf(" /s - Swap top and bottom halves of a file. (<outfile1> optional.)\n");
+	printf(" /s - Swap top and bottom halves of a file. (<outfile2> optional.)\n");
 	printf(" /w - Split file into two files, alternating words into output files.\n");
 	printf(" /p - Pad file to [psize] in K with [pbyte] value (0-255).\n");
 	printf("\n");
