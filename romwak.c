@@ -10,7 +10,7 @@
 
 #include "romwak.h"
 
-#define ROMWAK_VERSION	"0.3c" /* derived from 0.3 source code; see above note */
+#define ROMWAK_VERSION	"0.3d" /* derived from 0.3 source code; see above note */
 
 /* Usage() - Print program usage. */
 void Usage(){
@@ -632,7 +632,7 @@ int SwapHalf(char *fileIn, char *fileOut){
 		exit(EXIT_FAILURE);
 	}
 
-	close(pInFile);
+	fclose(pInFile);
 
 	/* create new file from buffers written in reverse order */
 	pOutFile = fopen(fileOut,"wb");
