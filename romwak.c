@@ -10,7 +10,7 @@
 
 #include "romwak.h"
 
-#define ROMWAK_VERSION	"0.3d" /* derived from 0.3 source code; see above note */
+#define ROMWAK_VERSION	"0.3e" /* derived from 0.3 source code; see above note */
 
 /* Usage() - Print program usage. */
 void Usage(){
@@ -20,6 +20,7 @@ void Usage(){
 	printf(" /f - Flip low/high bytes of a file. (<outfile> optional.)\n");
 	printf(" /h - Split file in half (two files).\n");
 	printf(" /m - Byte merge two files. (stores results in <outfile2>).\n");
+	printf(" /q - Byte merge four files. (See readme for syntax)\n");
 	printf(" /s - Swap top and bottom halves of a file. (<outfile2> optional.)\n");
 	printf(" /w - Split file into two files, alternating words into output files.\n");
 	printf(" /p - Pad file to [psize] in K with [pbyte] value (0-255).\n");
@@ -574,6 +575,189 @@ int MergeBytes(char *fileIn1, char *fileIn2, char *fileOut){
 }
 /*----------------------------------------------------------------------------*/
 
+/* MergeBytesQuad(char *fileIn1, char *fileIn2, char *fileIn3, char *fileIn4, char *fileOut) - /q
+ * Byte merges four files; stores result in fileOut.
+ *
+ * (Params)
+ * char *fileIn1		Input filename 1
+ * char *fileIn2		Input filename 2
+ * char *fileIn3		Input filename 3
+ * char *fileIn4		Input filename 4
+ * char *fileOut		Output filename
+ */
+int MergeBytesQuad(char *fileIn1, char *fileIn2, char *fileIn3, char *fileIn4, char *fileOut){
+	FILE *pInFile1, *pInFile2, *pInFile3, *pInFile4, *pOutFile;
+	long length1, length2, length3, length4;
+	unsigned char *inBuf1;
+	unsigned char *inBuf2;
+	unsigned char *inBuf3;
+	unsigned char *inBuf4;
+	size_t result;
+	long outBufLen;
+	unsigned char *outBuf;
+	long i = 0;
+	long curPos = 0;
+
+	if(!FileExists(fileIn1)){
+		return EXIT_FAILURE;
+	}
+	if(!FileExists(fileIn2)){
+		return EXIT_FAILURE;
+	}
+	if(!FileExists(fileIn3)){
+		return EXIT_FAILURE;
+	}
+	if(!FileExists(fileIn4)){
+		return EXIT_FAILURE;
+	}
+
+	printf("Merging bytes of '%s', '%s', '%s', and '%s'; saving to '%s'\n",
+		fileIn1,fileIn2,fileIn3,fileIn4,fileOut
+	);
+
+	/* Read file 1 */
+	pInFile1 = fopen(fileIn1,"rb");
+	if(pInFile1 == NULL){
+		perror("Error attempting to open first input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find first file size */
+	length1 = FileSize(pInFile1);
+	rewind(pInFile1);
+
+	/* put file 1's contents into buffer */
+	inBuf1 = (unsigned char*)malloc(length1);
+	if(inBuf1 == NULL){
+		printf("Error allocating memory for input file buffer 1.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBuf1,sizeof(unsigned char),length1,pInFile1);
+	if(result != length1){
+		perror("Error reading first input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile1);
+
+	/* Read file 2 */
+	pInFile2 = fopen(fileIn2,"rb");
+	if(pInFile2 == NULL){
+		perror("Error attempting to open second input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find second file size */
+	length2 = FileSize(pInFile2);
+	rewind(pInFile2);
+
+	/* put file 2's contents into buffer */
+	inBuf2 = (unsigned char*)malloc(length2);
+	if(inBuf2 == NULL){
+		printf("Error allocating memory for input file buffer 2.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBuf2,sizeof(unsigned char),length2,pInFile2);
+	if(result != length2){
+		perror("Error reading second input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile2);
+
+	/* Read file 3 */
+	pInFile3 = fopen(fileIn3,"rb");
+	if(pInFile3 == NULL){
+		perror("Error attempting to open third input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find third file size */
+	length3 = FileSize(pInFile3);
+	rewind(pInFile3);
+
+	/* put file 3's contents into buffer */
+	inBuf3 = (unsigned char*)malloc(length3);
+	if(inBuf3 == NULL){
+		printf("Error allocating memory for input file buffer 3.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBuf3,sizeof(unsigned char),length3,pInFile3);
+	if(result != length3){
+		perror("Error reading third input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile3);
+
+	/* Read file 4 */
+	pInFile4 = fopen(fileIn4,"rb");
+	if(pInFile4 == NULL){
+		perror("Error attempting to open fourth input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find fourth file size */
+	length4 = FileSize(pInFile4);
+	rewind(pInFile4);
+
+	/* put file 4's contents into buffer */
+	inBuf4 = (unsigned char*)malloc(length4);
+	if(inBuf4 == NULL){
+		printf("Error allocating memory for input file buffer 4.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBuf4,sizeof(unsigned char),length4,pInFile4);
+	if(result != length4){
+		perror("Error reading fourth input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile4);
+
+	/* Create new file */
+	pOutFile = fopen(fileOut,"wb");
+	if(pOutFile == NULL){
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* merge bytes into a new buffer */
+	outBufLen = length1+length2+length3+length4;
+	outBuf = (unsigned char*)malloc(outBufLen);
+	if(outBuf == NULL){
+		printf("Error allocating memory for output file buffer.");
+		exit(EXIT_FAILURE);
+	}
+
+	while(i<length1){
+		outBuf[curPos] = inBuf1[i];
+		outBuf[curPos+1] = inBuf2[i];
+		outBuf[curPos+2] = inBuf3[i];
+		outBuf[curPos+3] = inBuf4[i];
+		curPos+=4;
+		i++;
+	}
+	free(inBuf1);
+	free(inBuf2);
+	free(inBuf3);
+	free(inBuf4);
+
+	/* write output file */
+	result = fwrite(outBuf,sizeof(unsigned char),outBufLen,pOutFile);
+	if(result != outBufLen){
+		perror("Error writing output file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pOutFile);
+	printf("'%s' saved successfully!\n",fileOut);
+
+	free(outBuf);
+	return EXIT_SUCCESS;
+}
+
+/*----------------------------------------------------------------------------*/
+
 /* SwapHalf(char *fileIn, char *fileOut) - /s
  * Swaps the top and bottom halves of fileIn; writes to fileOut.
  *
@@ -773,6 +957,9 @@ int main(int argc, char* argv[]){
 
 			case 'm': /* byte merge two files */
 				return MergeBytes(argv[2],argv[3],argv[4]);
+
+			case 'q': /* byte merge four files */
+				return MergeBytesQuad(argv[2],argv[3],argv[4],argv[5],argv[6]);
 
 			case 's': /* swap top and bottom halves of a file */
 				return SwapHalf(argv[2],argv[3]);

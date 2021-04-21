@@ -16,10 +16,11 @@ ROMWak is a program whose parameters change depending on what option you pass in
 
 The base command is romwak <option>, where the options are:
 /b - Split file into two files, alternating bytes into separate files.
-/f - Flip low/high bytes of a file. (<outfile> optional.)
+/f - Flip low/high bytes of a file.
 /h - Split file in half (two files).
-/m - Byte merge two files. (stores results in <outfile2>).
-/s - Swap top and bottom halves of a file. (<outfile2> optional.)
+/m - Byte merge two files.
+/q - Byte merge four files.
+/s - Swap top and bottom halves of a file.
 /w - Split file into two files, alternating words into output files.
 /p - Pad file to [psize] in K with [pbyte] value (0-255).
 
@@ -45,6 +46,10 @@ Merges the bytes of infile1 and infile2 to create outfile.
 
 The byte of infile1 is written, then the byte of infile2 is written;
 repeat for the entire length of the file.
+
+### Byte Merge Four Files (/q) ###
+`romwak /m <infile1> <infile2> <infile3> <infile4> <outfile>`  
+Merges the bytes of infile1, infile2, infile3, and infile4 to create outfile.
 
 ### Swap Top and Bottom Halves of File (/s) ###
 `romwak /s <infile> [<outfile>]`  
