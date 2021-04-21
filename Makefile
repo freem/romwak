@@ -1,6 +1,6 @@
 # quick and dirty makefile that needs to be better prepared for cross-platform stuff
 CC = gcc
-CFLAGS += -ansi -O3 -pedantic
+CFLAGS += -ansi -O3 -pedantic -Wall
 
 .PHONY: all clean
 
