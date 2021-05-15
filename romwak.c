@@ -10,13 +10,14 @@
 
 #include "romwak.h"
 
-#define ROMWAK_VERSION	"0.3e" /* derived from 0.3 source code; see above note */
+#define ROMWAK_VERSION	"0.3f" /* derived from 0.3 source code; see above note */
 
 /* Usage() - Print program usage. */
 void Usage(){
 	printf("usage: romwak <option> <infile> <outfile> [outfile2] [psize] [pbyte]\n");
 	printf("You must use one of these options:\n");
 	printf(" /b - Split file into two files, alternating bytes into separate files.\n");
+	printf(" /c - Concatenate two files : <infile1> <infile2> <outfile>\n");
 	printf(" /f - Flip low/high bytes of a file. (<outfile> optional.)\n");
 	printf(" /h - Split file in half (two files).\n");
 	printf(" /m - Byte merge two files. (stores results in <outfile2>).\n");
@@ -928,6 +929,153 @@ int PadFile(char *fileIn, char *fileOut, char *padSize, char *padByte){
 }
 /*----------------------------------------------------------------------------*/
 
+/* ConcatFiles(char *fileIn, char *fileOutA, char *fileOutB) - /b
+ *
+ * (Params)
+ * char *fileInA			Input filename 1
+ * char *fileInB			Input filename 2
+ * char *fileOut			Output filename 
+ *
+ * OzzyOuzo   note: bored to mess up with system commands thus better to get it included into romwak
+ *			  pretty useful to generate appropriate P roms when using bank switching.
+ */
+
+ /* #define USE_PRINTF_ERRORS */
+int ConcatFiles(char *fileInA_, char *fileInB_, char *fileOut_)
+{
+	FILE *pInFileA, *pInFileB, *pOutFile;
+	long sizeA,sizeB;
+	unsigned char *inBufA,*inBufB;
+	size_t result;
+
+	if (!FileExists(fileInA_) || !FileExists(fileInB_)) {
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error input file not found\n");
+		#endif
+		return EXIT_FAILURE;
+	}
+
+
+	/* file A */
+
+	pInFileA = fopen(fileInA_, "rb");
+	if (pInFileA == NULL) {
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error attempting to open input file A\n");
+		#endif
+		perror("Error attempting to open input file A");
+		exit(EXIT_FAILURE);
+	}
+
+	sizeA = FileSize(pInFileA);
+	fseek(pInFileA, 0, SEEK_SET);
+
+	if (!sizeA) {
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error empty file A\n");
+		#endif
+		perror("Error empty file A");
+		exit(EXIT_FAILURE);
+	}
+
+	inBufA = (unsigned char*)malloc(sizeA);
+	if (inBufA == NULL){
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error allocating memory for input file A buffer.\n");
+		#endif
+		perror("Error allocating memory for input file A buffer.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBufA, sizeof(unsigned char),sizeA, pInFileA);
+	if (result != sizeA){
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error reading input file A\n");
+		#endif
+		perror("Error reading input file A");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFileA);
+
+	/* file B */
+
+	pInFileB = fopen(fileInB_, "rb");
+	if (pInFileB == NULL) {
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error attempting to open input file B\n");
+		#endif
+		perror("Error attempting to open input file B");
+		exit(EXIT_FAILURE);
+	}
+
+	sizeB = FileSize(pInFileB);
+	fseek(pInFileB, 0, SEEK_SET);
+
+	if (!sizeB) {
+		#ifdef USE_PRINTF_ERRORS
+		printf("Error empty file B\n");
+		#endif
+		perror("Error empty file B");
+		exit(EXIT_FAILURE);
+	}
+
+	inBufB = (unsigned char*)malloc(sizeB);
+	if (inBufB == NULL) {
+		#ifdef USE_PRINTF_ERRORS	
+		printf("Error allocating memory for input file B buffer.\n");
+		#endif
+		perror("Error allocating memory for input file B buffer.");
+		exit(EXIT_FAILURE);
+	}
+	
+	result = fread(inBufB, sizeof(unsigned char), sizeB, pInFileB);
+	if (result != sizeB) {
+		#ifdef USE_PRINTF_ERRORS	
+		printf("Error reading input file B\n");
+		#endif
+		perror("Error reading input file B");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFileB);
+
+	/* create concatened file */
+	pOutFile = fopen(fileOut_, "wb");
+	if (pOutFile == NULL) {
+		#ifdef USE_PRINTF_ERRORS	
+		printf("Error attempting to create output file\n");
+		#endif
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fwrite(inBufA, sizeof(unsigned char), sizeA, pOutFile);
+	if (result != sizeA) {
+		#ifdef USE_PRINTF_ERRORS	
+		printf("Error writing part A of output file\n");
+		#endif
+		perror("Error writing part A of output file");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fwrite(inBufB, sizeof(unsigned char), sizeB, pOutFile);
+	if (result != sizeB) {
+		#ifdef USE_PRINTF_ERRORS	
+		printf("Error writing part B of output file\n");
+		#endif
+		perror("Error writing part B of output file");
+		exit(EXIT_FAILURE);
+	}
+
+	fclose(pOutFile);
+
+	printf("'%s' + '%s' concatained into '%s' successfully!\n", fileInA_, fileInB_, fileOut_);
+
+	free(inBufA);
+	free(inBufB);
+	return EXIT_SUCCESS;
+}
+/*----------------------------------------------------------------------------*/
+
 /* ye olde main */
 int main(int argc, char* argv[]){
 	printf("ROMWak %s - original version by Jeff Kurtz / ANSI C port by freem\n",ROMWAK_VERSION);
@@ -948,6 +1096,9 @@ int main(int argc, char* argv[]){
 		switch(argv[1][1]){
 			case 'b': /* split file in two, alternating bytes */
 				return ByteSplit(argv[2],argv[3],argv[4]);
+
+			case 'c': /* concatenate two file2 */
+				return ConcatFiles(argv[2], argv[3], argv[4]);
 
 			case 'f': /* flip low/high bytes */
 				return FlipByte(argv[2],argv[3]);
