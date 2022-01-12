@@ -10,7 +10,7 @@
 
 #include "romwak.h"
 
-#define ROMWAK_VERSION	"0.3f" /* derived from 0.3 source code; see above note */
+#define ROMWAK_VERSION	"0.4" /* derived from 0.3 source code; see above note */
 
 /* Usage() - Print program usage. */
 void Usage(){
@@ -20,9 +20,11 @@ void Usage(){
 	printf(" /c - Concatenate two files : <infile1> <infile2> <outfile>\n");
 	printf(" /f - Flip low/high bytes of a file. (<outfile> optional.)\n");
 	printf(" /h - Split file in half (two files).\n");
+	printf(" /i - Generate rom information (size,crc) (as a text file).\n");
 	printf(" /m - Byte merge two files. (stores results in <outfile2>).\n");
 	printf(" /q - Byte merge four files. (See readme for syntax)\n");
 	printf(" /s - Swap top and bottom halves of a file. (<outfile2> optional.)\n");
+	printf(" /u - Byte update two files. (stores results in <outfile2>).\n");
 	printf(" /w - Split file into two files, alternating words into output files.\n");
 	printf(" /p - Pad file to [psize] in K with [pbyte] value (0-255).\n");
 	printf("\n");
@@ -759,6 +761,136 @@ int MergeBytesQuad(char *fileIn1, char *fileIn2, char *fileIn3, char *fileIn4, c
 
 /*----------------------------------------------------------------------------*/
 
+/* UpdateBytes(char *fileIn1, char *fileIn2,size_t offset, char *fileOut) - /u
+ * Byte update two files; stores result in fileOut.
+ * Content of fileIn1 overwrite content of fileIn2 with offset
+ *
+ * (Params)
+ * char *fileIn1		Input filename 1
+ * char *fileIn2		Input filename 2
+ * char *fileOut		Output filename
+ * size_t offset		Update size
+
+ */
+int UpdateBytes(char *fileIn1, char *fileIn2,char *fileOut,char* updateSize) {
+	FILE *pInFile1, *pInFile2, *pOutFile;
+	long length1, length2;
+	unsigned char *inBuf1;
+	unsigned char *inBuf2;
+	size_t result;
+	long outBufLen;
+	/*unsigned char *outBuf;*/
+	long i = 0;
+	long curPos = 0;
+	size_t size;
+
+	if (updateSize != NULL) {
+		size = atol(updateSize);
+	}
+	else {
+		perror("Error need size parameter");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!FileExists(fileIn1)) {
+		return EXIT_FAILURE;
+	}
+	if (!FileExists(fileIn2)) {
+		return EXIT_FAILURE;
+	}
+
+	printf("Updating (%u)bytes of '%s' to '%s, saving to '%s'\n",size, fileIn1, fileIn2, fileOut);
+
+	/* Read file 1 */
+	pInFile1 = fopen(fileIn1, "rb");
+	if (pInFile1 == NULL) {
+		perror("Error attempting to open first input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find first file size */
+	length1 = FileSize(pInFile1);
+	rewind(pInFile1);
+
+	if (size > length1) {
+		printf("Error update size larger than file buffer 1.");
+		exit(EXIT_FAILURE);
+	}
+
+	/* put file 1's contents into buffer */
+	inBuf1 = (unsigned char*)malloc(length1);
+	if (inBuf1 == NULL) {
+		printf("Error allocating memory for input file buffer 1.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBuf1, sizeof(unsigned char), length1, pInFile1);
+	if (result != length1) {
+		perror("Error reading first input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile1);
+
+	/* Read file 2 */
+	pInFile2 = fopen(fileIn2, "rb");
+	if (pInFile2 == NULL) {
+		perror("Error attempting to open second input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find second file size */
+	length2 = FileSize(pInFile2);
+	/*
+	if ((offset + length1) > length2) {
+		printf("Error update overflow file buffer1 size and/or offset are out bounds.");
+		exit(EXIT_FAILURE);
+	}
+	*/
+
+	rewind(pInFile2);
+
+	/* put file 2's contents into buffer */
+	inBuf2 = (unsigned char*)malloc(length2);
+	if (inBuf2 == NULL) {
+		printf("Error allocating memory for input file buffer 2.");
+		exit(EXIT_FAILURE);
+	}
+
+	result = fread(inBuf2, sizeof(unsigned char), length2, pInFile2);
+	if (result != length2) {
+		perror("Error reading second input file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(pInFile2);
+
+	memcpy(inBuf2, inBuf1, size);
+
+	/* Create new file */
+	pOutFile = fopen(fileOut, "wb");
+	if (pOutFile == NULL) {
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* write output file */
+	result = fwrite(inBuf2, sizeof(unsigned char), length2, pOutFile);
+	if (result != length2) {
+		perror("Error writing output file");
+		exit(EXIT_FAILURE);
+	}
+
+	free(inBuf1);
+	free(inBuf2);
+
+	fclose(pOutFile);
+	printf("'%s' saved successfully!\n", fileOut);
+
+	/*free(outBuf);*/
+	return EXIT_SUCCESS;
+}
+
+/*----------------------------------------------------------------------------*/
+
 /* SwapHalf(char *fileIn, char *fileOut) - /s
  * Swaps the top and bottom halves of fileIn; writes to fileOut.
  *
@@ -1074,6 +1206,123 @@ int ConcatFiles(char *fileInA_, char *fileInB_, char *fileOut_)
 	free(inBufB);
 	return EXIT_SUCCESS;
 }
+
+/*----------------------------------------------------------------------------*/
+
+typedef unsigned short CRC16;
+typedef unsigned long CRC32;
+
+#define POLYNOMIAL 0x04c11db7L
+
+static unsigned long crc_table[256];
+
+/* generate the table of CRC remainders for all possible bytes */
+void gen_crc_table(void)
+{
+	register unsigned long	crc_accum;
+	register int			i, j;
+
+	for (i = 0; i < 256; i++) {
+		crc_accum = ((unsigned long)i << 24);
+		for (j = 0; j < 8; j++) {
+			if (crc_accum & 0x80000000L)
+				crc_accum = (crc_accum << 1) ^ POLYNOMIAL;
+			else
+				crc_accum = (crc_accum << 1);
+		}
+		crc_table[i] = crc_accum;
+	}
+	//	return;
+}
+
+/* update the CRC on the data block one byte at a time */
+CRC32 update_crc(unsigned long crc_accum, char * data_blk_ptr, int data_blk_size)
+{
+	register int	i, j;
+
+	for (j = 0; j < data_blk_size; j++) {
+		i = ((int)(crc_accum >> 24) ^ *data_blk_ptr++) & 0xff;
+		crc_accum = (crc_accum << 8) ^ crc_table[i];
+	}
+
+	return crc_accum;
+}
+
+// ....
+void crc32Init(void)
+{
+	gen_crc_table();
+}
+
+// ....
+CRC32 crc32GenerateKey(unsigned long crc_accum, char * p_data, int data_size)
+{
+	return update_crc(crc_accum, p_data, data_size);
+}
+
+/*----------------------------------------------------------------------------*/
+
+/* InfoFile(char *fileIn, char *fileOut) - /i
+ * Generates ROM file information as a text file.
+ *
+ * (Params)
+ * char *fileIn			Input filename
+ * char *fileOut		Output filename (text)
+ */
+int InfoFile(char *fileIn, char *fileOut) {
+	FILE *pInFile, *pOutFile;
+	long length;
+	CRC32 crc;
+	unsigned char *inBuf;
+	size_t result;
+
+	if (!FileExists(fileIn)) {
+		return EXIT_FAILURE;
+	}
+	printf("Generating file informations of '%s', saving to '%s'\n", fileIn, fileOut);
+
+	pInFile = fopen(fileIn, "rb");
+	if (pInFile == NULL) {
+		perror("Error attempting to open input file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* find current file size */
+	length = FileSize(pInFile);
+	rewind(pInFile);
+
+	/* read halves of file into two buffers */
+	inBuf = (unsigned char*)malloc(length);
+
+	if (inBuf == NULL) {
+		printf("Error allocating memory for input file buffer.");
+		exit(EXIT_FAILURE);
+	}
+
+	fclose(pInFile);
+
+	crc32Init();
+
+	crc = crc32GenerateKey(0,inBuf,length);
+	
+
+	/* create new text file containing rom size and crc informations */
+	pOutFile = fopen(fileOut, "wt");
+	if (pOutFile == NULL) {
+		perror("Error attempting to create output file");
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(pOutFile, "%s size:%u crc32:%u", fileIn, length, crc);
+	printf("%s size:%u , crc:%u", fileIn, length, crc);
+
+	fclose(pOutFile);
+	printf("'%s' saved successfully!\n", fileOut);
+
+	free(inBuf);
+	return EXIT_SUCCESS;
+}
+
 /*----------------------------------------------------------------------------*/
 
 /* ye olde main */
@@ -1106,6 +1355,9 @@ int main(int argc, char* argv[]){
 			case 'h': /* split file in half (two files) */
 				return EqualSplit(argv[2],argv[3],argv[4]);
 
+			case 'i': /* rom information (size,crc) */
+				return InfoFile(argv[2], argv[3]);
+
 			case 'm': /* byte merge two files */
 				return MergeBytes(argv[2],argv[3],argv[4]);
 
@@ -1114,6 +1366,9 @@ int main(int argc, char* argv[]){
 
 			case 's': /* swap top and bottom halves of a file */
 				return SwapHalf(argv[2],argv[3]);
+
+			case 'u': /* byte update two files with size */
+				return UpdateBytes(argv[2], argv[3], argv[4], argv[5]);
 
 			case 'w': /* split file in two, alternating words */
 				return WordSplit(argv[2],argv[3],argv[4]);

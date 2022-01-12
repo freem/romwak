@@ -19,9 +19,11 @@ The base command is romwak <option>, where the options are:
 * `/c` - Concatenate two files
 * `/f` - Flip low/high bytes of a file.
 * `/h` - Split file in half (two files).
+* `/i` - Generate rom information (size,crc) (as a text file).
 * `/m` - Byte merge two files.
 * `/q` - Byte merge four files.
 * `/s` - Swap top and bottom halves of a file.
+* `/u` - Byte update two files (with size).
 * `/w` - Split file into two files, alternating words into output files.
 * `/p` - Pad file to [psize] in K with [pbyte] value (0-255).
 
@@ -45,6 +47,10 @@ Flips the high and low bytes of the specified file.
 `romwak /h <infile> <outfile1> <outfile2>`  
 Splits the input file in half into two files (outfile1 and outfile2).
 
+### Export ROM Information (/i) ###
+`romwak /i <infile> <outfile>
+Rom information as a text file (size,crc32)
+
 ### Byte Merge Two Files (/m) ###
 `romwak /m <infile1> <infile2> <outfile>`  
 Merges the bytes of infile1 and infile2 to create outfile.
@@ -63,6 +69,10 @@ Swaps the top and bottom halves of the file.
 This works pretty awkwardly with odd length files (one byte will be missing).
 
 `<outfile>` is optional; if omitted, the file will be swapped in place.
+
+### Byte Update Two Files (/u) ###
+`romwak /u <infile1> <infile2> <outfile> <update size>`  
+Updates some bytes of infile2 with infile1 to create outfile.
 
 ### Split File Two, Alternating Words (/w) ###
 `romwak /w <infile> <outfile1> <outfile2>`  
