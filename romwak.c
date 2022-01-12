@@ -7,6 +7,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "romwak.h"
 
@@ -778,10 +779,7 @@ int UpdateBytes(char *fileIn1, char *fileIn2,char *fileOut,char* updateSize) {
 	unsigned char *inBuf1;
 	unsigned char *inBuf2;
 	size_t result;
-	long outBufLen;
 	/*unsigned char *outBuf;*/
-	long i = 0;
-	long curPos = 0;
 	size_t size;
 
 	if (updateSize != NULL) {
@@ -799,7 +797,7 @@ int UpdateBytes(char *fileIn1, char *fileIn2,char *fileOut,char* updateSize) {
 		return EXIT_FAILURE;
 	}
 
-	printf("Updating (%u)bytes of '%s' to '%s, saving to '%s'\n",size, fileIn1, fileIn2, fileOut);
+	printf("Updating (%lu) bytes of '%s' to '%s, saving to '%s'\n", (unsigned long)size, fileIn1, fileIn2, fileOut);
 
 	/* Read file 1 */
 	pInFile1 = fopen(fileIn1, "rb");
@@ -1232,11 +1230,10 @@ void gen_crc_table(void)
 		}
 		crc_table[i] = crc_accum;
 	}
-	//	return;
 }
 
 /* update the CRC on the data block one byte at a time */
-CRC32 update_crc(unsigned long crc_accum, char * data_blk_ptr, int data_blk_size)
+CRC32 update_crc(unsigned long crc_accum, unsigned char * data_blk_ptr, int data_blk_size)
 {
 	register int	i, j;
 
@@ -1248,14 +1245,12 @@ CRC32 update_crc(unsigned long crc_accum, char * data_blk_ptr, int data_blk_size
 	return crc_accum;
 }
 
-// ....
 void crc32Init(void)
 {
 	gen_crc_table();
 }
 
-// ....
-CRC32 crc32GenerateKey(unsigned long crc_accum, char * p_data, int data_size)
+CRC32 crc32GenerateKey(unsigned long crc_accum, unsigned char * p_data, int data_size)
 {
 	return update_crc(crc_accum, p_data, data_size);
 }
@@ -1274,7 +1269,6 @@ int InfoFile(char *fileIn, char *fileOut) {
 	long length;
 	CRC32 crc;
 	unsigned char *inBuf;
-	size_t result;
 
 	if (!FileExists(fileIn)) {
 		return EXIT_FAILURE;
@@ -1305,7 +1299,6 @@ int InfoFile(char *fileIn, char *fileOut) {
 
 	crc = crc32GenerateKey(0,inBuf,length);
 	
-
 	/* create new text file containing rom size and crc informations */
 	pOutFile = fopen(fileOut, "wt");
 	if (pOutFile == NULL) {
@@ -1313,8 +1306,8 @@ int InfoFile(char *fileIn, char *fileOut) {
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(pOutFile, "%s size:%u crc32:%u", fileIn, length, crc);
-	printf("%s size:%u , crc:%u", fileIn, length, crc);
+	fprintf(pOutFile, "%s size:%lu crc32:%lu", fileIn, length, crc);
+	printf("%s size:%lu , crc:%lu", fileIn, length, crc);
 
 	fclose(pOutFile);
 	printf("'%s' saved successfully!\n", fileOut);
